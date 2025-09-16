@@ -18,8 +18,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
-import static org.example.constants.MessageConstant.HELP_MESSAGE;
-import static org.example.constants.MessageConstant.RULES_MESSAGE;
+import static org.example.constant.MessageConstant.HELP_MESSAGE;
+import static org.example.constant.MessageConstant.RULES_MESSAGE;
 
 @Service
 public class CommandService extends ListenerAdapter {
@@ -108,7 +108,7 @@ public class CommandService extends ListenerAdapter {
         StringBuilder commands = new StringBuilder();
 
         // Базовые команды для всех
-        commands.append("**🎯 Основные команды:**\n");
+        commands.append("** Основные команды:**\n");
         commands.append(String.format("`/%s` - Правила сервера\n", "rules"));
         commands.append(String.format("`/%s` - Ваш профиль\n", "profile"));
         commands.append(String.format("`/%s` - Информация о сервере\n", "serverinfo"));
@@ -116,27 +116,23 @@ public class CommandService extends ListenerAdapter {
 
         // Команды для REGULAR и выше
         if (level.canAccess(AccessLevel.REGULAR)) {
-            commands.append("**🛠️ Утилиты:**\n");
             commands.append(String.format("`/%s` - Настройки бота\n", "settings"));
             commands.append(String.format("`/%s` - Техническая поддержка\n\n", "support"));
         }
 
         // Команды для EXPERT и выше
         if (level.canAccess(AccessLevel.EXPERT)) {
-            commands.append("**📊 Информация:**\n");
             commands.append(String.format("`/%s` - Информация о пользователе\n", "userinfo"));
             commands.append(String.format("`/%s` - Оставить отзыв\n\n", "feedback"));
         }
 
         // Команды для MODERATOR и выше
         if (level.canAccess(AccessLevel.MODERATOR)) {
-            commands.append("**⚡ Модерация:**\n");
             commands.append(String.format("`/%s` - Очистка сообщений\n", "clear"));
         }
 
         // Команды для ADMIN
         if (level.canAccess(AccessLevel.ADMIN)) {
-            commands.append("\n**🔧 Администрирование:**\n");
             commands.append("`/admin` - Админ панель\n");
         }
 
@@ -171,7 +167,7 @@ public class CommandService extends ListenerAdapter {
     private void handleServerInfoCommand(SlashCommandInteractionEvent event, long guildId) {
         MessageCreateData message = new MessageCreateBuilder()
                 .setContent("""
-                        **🏰 ИНФОРМАЦИЯ О СЕРВЕРЕ**
+                        ** ИНФОРМАЦИЯ О СЕРВЕРЕ**
                         
                         **Название:** %s
                         **Участников:** %d
@@ -191,7 +187,7 @@ public class CommandService extends ListenerAdapter {
     private void handleMenuCommand(SlashCommandInteractionEvent event, long guildId) {
         MessageCreateData message = new MessageCreateBuilder()
                 .setContent("""
-                        **📋 ГЛАВНОЕ МЕНЮ**
+                        ** ГЛАВНОЕ МЕНЮ**
                         
                         **Информация:**
                         %s - Правила сервера
@@ -236,7 +232,7 @@ public class CommandService extends ListenerAdapter {
     private void handleSupportCommand(SlashCommandInteractionEvent event, long guildId) {
         MessageCreateData message = new MessageCreateBuilder()
                 .setContent("""
-                        **🆘 ТЕХНИЧЕСКАЯ ПОДДЕРЖКА**
+                        ** ТЕХНИЧЕСКАЯ ПОДДЕРЖКА**
                         
                         Если у вас возникли проблемы:
                         1. Опишите вашу проблему

@@ -1,6 +1,12 @@
 package org.example.enums;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
 public enum AccessLevel {
+    MUTE("Опущенный", -1),
     NEWBIE("Новичок", 0),
     REGULAR("Обычный пользователь", 1), 
     EXPERT("Эксперт", 2),
@@ -10,12 +16,7 @@ public enum AccessLevel {
     private final String displayName;
     private final int level;
 
-    AccessLevel(String displayName, int level) {
-        this.displayName = displayName;
-        this.level = level;
+    public boolean canAccess(AccessLevel required) {
+        return this.level >= required.level;
     }
-
-    public String getDisplayName() { return displayName; }
-    public int getLevel() { return level; }
-    public boolean canAccess(AccessLevel required) { return this.level >= required.level; }
 }
