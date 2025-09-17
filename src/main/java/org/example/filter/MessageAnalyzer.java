@@ -37,7 +37,7 @@ public class MessageAnalyzer {
 
                 Member member = message.getMember();
                 String id = member.getId();
-                violationTrackerService.addViolation(id);
+                violationTrackerService.addViolation(member);
                 int violationCount = violationTrackerService.getViolationCount(id);
                 if(violationCount >= 2) {
                     violationTrackerService.muteUser(event, member);
