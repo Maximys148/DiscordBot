@@ -22,6 +22,7 @@ public class ViolationTrackerService {
     private final Map<String, Integer> userViolations = new ConcurrentHashMap<>();
     private final Map<String, List<Role>> userRoles = new ConcurrentHashMap<>();
     private final Set<String> mutedUsers = new HashSet<>();
+    private final Guild guild;
 
     // Время жизни нарушений (24 часа)
     private static final long VIOLATION_EXPIRE_TIME = 24 * 60 * 60 * 1000;
@@ -29,7 +30,8 @@ public class ViolationTrackerService {
 
     private final Logger log = LogManager.getLogger(ViolationTrackerService.class);
 
-    public ViolationTrackerService() {
+    public ViolationTrackerService(Guild guild) {
+        this.guild = guild;
     }
 
     public void addViolation(Member member) {
@@ -124,7 +126,7 @@ public class ViolationTrackerService {
                 guild.removeRoleFromMember(member, muteRole).queue(
                         success -> {
                             // Возвращаем сохранённые роли после успешного снятия мута
-                            restoreUserRoles(guild, member);
+                            restoreUserRoles(member);
                         },
                         error -> {
                             event.getChannel().sendMessage("❌ Ошибка при снятии роли: " + error.getMessage()).queue();
@@ -132,7 +134,7 @@ public class ViolationTrackerService {
                 );
             } else {
                 // Если роли нет, просто восстанавливаем права
-                restoreUserRoles(guild, member);
+                restoreUserRoles(member);
             }
 
         } catch (Exception e) {
@@ -141,7 +143,7 @@ public class ViolationTrackerService {
         }
     }
 
-    private void restoreUserRoles(Guild guild, Member member) {
+    private void restoreUserRoles(Member member) {
         // Возвращаем сохранённые роли
         List<Role> savedRoles = userRoles.getOrDefault(member.getId(), new ArrayList<>());
         if (!savedRoles.isEmpty()) {

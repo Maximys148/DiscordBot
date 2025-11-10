@@ -1,15 +1,10 @@
 package org.example.config;
 
-
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.service.CommandService;
-import org.example.service.MessageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,16 +34,19 @@ public class JDAConfig {
     }
 
     @Bean
-    public JDA jda(MessageService messageService, Activity botActivity, CommandService commandService) {
-        return JDABuilder.createDefault(token)
-                .enableIntents(
-                        GatewayIntent.MESSAGE_CONTENT,
-                        GatewayIntent.GUILD_MESSAGES,
-                        GatewayIntent.GUILD_MEMBERS
-                )
-                .enableCache(CacheFlag.VOICE_STATE)
-                .setActivity(botActivity)
-                .addEventListeners(messageService, commandService)
-                .build();
+    public JDA jda(Activity botActivity) {
+        try {
+            JDA jda = JDABuilder.createDefault(token)
+                    .setActivity(botActivity)
+                    .build();
+
+            jda.awaitReady();
+            log.info("JDA успешно инициализирован и готов");
+            return jda;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Инициализация JDA прервана", e);
+        }
     }
+
 }

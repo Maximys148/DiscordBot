@@ -24,13 +24,15 @@ public class VoiceConnectionService {
 
     private final MyAudioReceiveHandler myAudioReceiveHandler;
     private final Map<String, String> guildListeningChannels = new ConcurrentHashMap<>();
+    private final Guild guild;
     private final Logger log = LogManager.getLogger(VoiceConnectionService.class);
 
-    public VoiceConnectionService(MyAudioReceiveHandler myAudioReceiveHandler) {
+    public VoiceConnectionService(MyAudioReceiveHandler myAudioReceiveHandler, Guild guild) {
         this.myAudioReceiveHandler = myAudioReceiveHandler;
+        this.guild = guild;
     }
 
-    public void connectToVoiceChannel(Guild guild) {
+    public void connectToVoiceChannel() {
         try {
             AudioManager audioManager = guild.getAudioManager();
 
@@ -55,7 +57,7 @@ public class VoiceConnectionService {
             });
 
             // Ищем подходящий голосовой канал
-            AudioChannel targetChannel = findSuitableVoiceChannel(guild);
+            AudioChannel targetChannel = findSuitableVoiceChannel();
 
             if (targetChannel == null) {
                 log.warn("Не найден подходящий голосовой канал на сервере: {}", guild.getName());
@@ -84,7 +86,7 @@ public class VoiceConnectionService {
         }
     }
 
-    private AudioChannel findSuitableVoiceChannel(Guild guild) {
+    private AudioChannel findSuitableVoiceChannel() {
         // Приоритет 2: Любой канал с пользователями
         List<VoiceChannel> voiceChannels = guild.getVoiceChannels();
         for (VoiceChannel channel : voiceChannels) {

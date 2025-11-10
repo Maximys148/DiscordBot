@@ -10,18 +10,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessageService extends ListenerAdapter {
 
-    //private final CommandFormatter commandFormatter;
     private final Logger log = LogManager.getLogger(MessageService.class);
     private MessageAnalyzer analyzer;
 
-    public MessageService(CommandFormatter commandFormatter, MessageAnalyzer analyzer) {
-        //this.commandFormatter = commandFormatter;
+    public MessageService(MessageAnalyzer analyzer) {
         this.analyzer = analyzer;
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) return;
+        if (event.getAuthor().isBot())
+            return;
         analyzer.checkMessageForViolation(event);
     }
 }

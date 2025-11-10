@@ -29,11 +29,13 @@ public class CommandService extends ListenerAdapter {
 
     private final CommandFormatter commandFormatter;
     private final VoiceConnectionService voiceConnectionService;
+    private final Guild guild;
     private final Logger log = LogManager.getLogger(CommandService.class);
 
-    public CommandService(CommandFormatter commandFormatter, VoiceConnectionService voiceConnectionService) {
+    public CommandService(CommandFormatter commandFormatter, VoiceConnectionService voiceConnectionService, Guild guild) {
         this.commandFormatter = commandFormatter;
         this.voiceConnectionService = voiceConnectionService;
+        this.guild = guild;
     }
 
     @Override
@@ -44,25 +46,25 @@ public class CommandService extends ListenerAdapter {
 
                 switch (event.getName()) {
                     case "help":
-                        handleHelpCommand(event, guildId);
+                        handleHelpCommand(event);
                         break;
                     case "rules":
-                        handleRulesCommand(event, guildId);
+                        handleRulesCommand(event);
                         break;
                     case "profile":
-                        handleProfileCommand(event, guildId);
+                        handleProfileCommand(event);
                         break;
                     case "server_info":
-                        handleServerInfoCommand(event, guildId);
+                        handleServerInfoCommand(event);
                         break;
                     case "menu":
                         handleMenuCommand(event, guildId);
                         break;
                     case "support":
-                        handleSupportCommand(event, guildId);
+                        handleSupportCommand(event);
                         break;
                     case "settings":
-                        handleSettingsCommand(event, guildId);
+                        handleSettingsCommand(event);
                         break;
                     case "join_voice":
                         handleVoiceCommand(event);
@@ -80,20 +82,20 @@ public class CommandService extends ListenerAdapter {
         });
     }
 
-    private void handleHelpCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleHelpCommand(SlashCommandInteractionEvent event) {
         String username = event.getUser().getAsMention();
-        AccessLevel userLevel = getUserAccessLevel(event.getUser(), event.getGuild());
+        AccessLevel userLevel = getUserAccessLevel(event.getUser());
 
         String message = HELP_MESSAGE.formatted(
                 username,
                 userLevel.getDisplayName(),
-                getAvailableCommandsForLevel(userLevel, guildId)
+                getAvailableCommandsForLevel(userLevel)
         );
 
         event.getHook().sendMessage(message).queue();
     }
 
-    private AccessLevel getUserAccessLevel(User user, Guild guild) {
+    private AccessLevel getUserAccessLevel(User user) {
         Member member = guild.getMember(user);
         if (member == null) return AccessLevel.NEWBIE;
 
@@ -115,7 +117,7 @@ public class CommandService extends ListenerAdapter {
         }
     }
 
-    private String getAvailableCommandsForLevel(AccessLevel level, long guildId) {
+    private String getAvailableCommandsForLevel(AccessLevel level) {
         StringBuilder commands = new StringBuilder();
 
         // Базовые команды для всех
@@ -150,11 +152,11 @@ public class CommandService extends ListenerAdapter {
         return commands.toString();
     }
 
-    private void handleRulesCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleRulesCommand(SlashCommandInteractionEvent event) {
         event.getHook().sendMessage(RULES_MESSAGE).queue();
     }
 
-    private void handleProfileCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleProfileCommand(SlashCommandInteractionEvent event) {
         String user = event.getUser().getAsMention();
         String joinDate = event.getMember().getTimeJoined().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
@@ -168,7 +170,7 @@ public class CommandService extends ListenerAdapter {
                         """.formatted(
                         user,
                         joinDate,
-                        getUserAccessLevel(event.getUser(), event.getGuild()).getDisplayName()
+                        getUserAccessLevel(event.getUser()).getDisplayName()
                 ))
                 .build();
 
@@ -183,12 +185,12 @@ public class CommandService extends ListenerAdapter {
                 .orElseThrow(() -> new RuntimeException("Голосовой канал не найден"));
 
         // Подключаемся к голосовому каналу
-        voiceConnectionService.connectToVoiceChannel(guild);
+        voiceConnectionService.connectToVoiceChannel();
         log.info("Подключение к голосовому каналу: {}", voiceChannel.getName());
         log.info("Готово. Ожидание данных...");
     }
 
-    private void handleServerInfoCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleServerInfoCommand(SlashCommandInteractionEvent event) {
         MessageCreateData message = new MessageCreateBuilder()
                 .setContent("""
                         ** ИНФОРМАЦИЯ О СЕРВЕРЕ**
@@ -241,7 +243,7 @@ public class CommandService extends ListenerAdapter {
         event.getHook().sendMessage(message).queue();
     }
 
-    private void handleUserInfoCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleUserInfoCommand(SlashCommandInteractionEvent event) {
         OptionMapping userOption = event.getOption("user");
         // Реализация информации о пользователе
         event.reply("Информация о пользователе...").queue();
@@ -253,7 +255,8 @@ public class CommandService extends ListenerAdapter {
         event.reply("Очистка сообщений...").queue();
     }
 
-    private void handleSupportCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleSupportCommand(SlashCommandInteractionEvent event) {
+        long guildId = event.getGuild().getIdLong();
         MessageCreateData message = new MessageCreateBuilder()
                 .setContent("""
                         ** ТЕХНИЧЕСКАЯ ПОДДЕРЖКА**
@@ -281,7 +284,8 @@ public class CommandService extends ListenerAdapter {
         event.getHook().sendMessage(message).queue();
     }
 
-    private void handleSettingsCommand(SlashCommandInteractionEvent event, long guildId) {
+    private void handleSettingsCommand(SlashCommandInteractionEvent event) {
+        long guildId = event.getGuild().getIdLong();
         MessageCreateData message = new MessageCreateBuilder()
                 .setContent("""
                         **⚙️ НАСТРОЙКИ БОТА**
