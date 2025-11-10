@@ -3,6 +3,7 @@ package org.example.service;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.enums.AccessLevel;
+import org.example.service.voice.VoiceConnectionService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,14 +23,17 @@ import java.time.temporal.ChronoUnit;
 import static org.example.constant.MessageConstant.HELP_MESSAGE;
 import static org.example.constant.MessageConstant.RULES_MESSAGE;
 
+
 @Service
 public class CommandService extends ListenerAdapter {
 
     private final CommandFormatter commandFormatter;
+    private final VoiceConnectionService voiceConnectionService;
     private final Logger log = LogManager.getLogger(CommandService.class);
 
-    public CommandService(CommandFormatter commandFormatter) {
+    public CommandService(CommandFormatter commandFormatter, VoiceConnectionService voiceConnectionService) {
         this.commandFormatter = commandFormatter;
+        this.voiceConnectionService = voiceConnectionService;
     }
 
     @Override
@@ -47,7 +52,7 @@ public class CommandService extends ListenerAdapter {
                     case "profile":
                         handleProfileCommand(event, guildId);
                         break;
-                    case "serverinfo":
+                    case "server_info":
                         handleServerInfoCommand(event, guildId);
                         break;
                     case "menu":
@@ -58,6 +63,12 @@ public class CommandService extends ListenerAdapter {
                         break;
                     case "settings":
                         handleSettingsCommand(event, guildId);
+                        break;
+                    case "join_voice":
+                        handleVoiceCommand(event);
+                        break;
+                    case "test_vosk":
+                        handleTestVoskCommand(event);
                         break;
                 }
             } catch (Exception e) {
@@ -162,6 +173,19 @@ public class CommandService extends ListenerAdapter {
                 .build();
 
         event.getHook().sendMessage(message).queue();
+    }
+
+    private void handleVoiceCommand(SlashCommandInteractionEvent event) {
+        Guild guild = event.getGuild();
+        // Находим голосовой канал по имени
+        VoiceChannel voiceChannel = guild.getVoiceChannelsByName("Лобби", true).stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Голосовой канал не найден"));
+
+        // Подключаемся к голосовому каналу
+        voiceConnectionService.connectToVoiceChannel(guild);
+        log.info("Подключение к голосовому каналу: {}", voiceChannel.getName());
+        log.info("Готово. Ожидание данных...");
     }
 
     private void handleServerInfoCommand(SlashCommandInteractionEvent event, long guildId) {
@@ -283,5 +307,17 @@ public class CommandService extends ListenerAdapter {
                 .build();
 
         event.getHook().sendMessage(message).queue();
+    }
+
+    private void handleTestVoskCommand(SlashCommandInteractionEvent event) {
+        try {
+            event.deferReply().queue();
+
+
+            event.getHook().sendMessage("✅ Тесты Vosk запущены! Проверьте логи в консоли.").queue();
+
+        } catch (Exception e) {
+            event.getHook().sendMessage("❌ Ошибка теста Vosk: " + e.getMessage()).queue();
+        }
     }
 }

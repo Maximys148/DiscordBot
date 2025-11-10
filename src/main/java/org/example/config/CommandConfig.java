@@ -1,14 +1,9 @@
 package org.example.config;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,16 +12,6 @@ import java.util.List;
 @Configuration
 public class CommandConfig {
 
-    private final JDA jda;
-    @Value("${guild.id}")
-    private String guildId;
-
-    private final Logger log = LogManager.getLogger(CommandConfig.class);
-
-    public CommandConfig(JDA jda) {
-        this.jda = jda;
-    }
-
     @Bean
     public List<SlashCommandData> globalCommands() {
         return List.of(
@@ -34,10 +19,12 @@ public class CommandConfig {
                 Commands.slash("help", "Показать список всех команд"),
                 Commands.slash("menu", "Главное меню бота"),
                 Commands.slash("rules", "Показать правила сервера"),
+                Commands.slash("join_voice", "Подключить бота к голосовому каналу"),
+                Commands.slash("test_vosk", "Протестировать работу Vosk"),
 
                 // Информационные команды
                 Commands.slash("profile", "Посмотреть свой профиль"),
-                Commands.slash("serverinfo", "Информация о сервере"),
+                Commands.slash("server_jinfo", "Информация о сервере"),
                 Commands.slash("userinfo", "Информация о пользователе")
                         .addOption(OptionType.USER, "user", "Пользователь", false),
 

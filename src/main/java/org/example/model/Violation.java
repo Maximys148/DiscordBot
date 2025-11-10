@@ -6,7 +6,7 @@ import org.example.enums.ViolationType;
 @AllArgsConstructor
 @Getter
 public class Violation {
-    private ViolationType type; // Тип нарушенея
+    private ViolationType type; // Тип нарушения
     private String content; // Содержимое сообщение
     private long timestamp; // Время нарушения
     private String messageId;

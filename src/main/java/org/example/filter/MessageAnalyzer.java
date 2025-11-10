@@ -28,7 +28,7 @@ public class MessageAnalyzer {
             if (message1.contains(BAN_WORD)) {
                 // Формируем сообщение о нарушении
                 String violationMessage = String.format(
-                                "%s, еще раз %s спизданёж в мут отлетишь",
+                                "%s, еще раз %s спизданёшь в мут отлетишь",
                         author,
                         BAN_WORD,
                         message.getContentRaw()

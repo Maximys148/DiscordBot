@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.service.CommandFormatter;
 import org.example.service.CommandService;
 import org.example.service.MessageService;
 import org.springframework.beans.factory.annotation.Value;
