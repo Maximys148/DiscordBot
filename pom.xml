@@ -25,6 +25,18 @@
         <jda.version>5.0.0-beta.20</jda.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>sonatype-oss-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>local-marytts-dependencies</id>
+            <url>file://${project.basedir}/../lib/repo</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -40,11 +52,7 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </dependency>
-        <!-- Log4j2 -->
+        <!-- Добавляем Log4j2 -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -53,6 +61,11 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j2.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/net.dv8tion/JDA -->
@@ -122,6 +135,27 @@
             <groupId>org.bytedeco</groupId>
             <artifactId>ffmpeg-platform</artifactId>
             <version>6.0-1.5.9</version>
+        </dependency>
+        <!-- MaryTTS модули -->
+        <!--<dependency>
+            <groupId>de.dfki.mary</groupId>
+            <artifactId>marytts-common</artifactId>
+            <version>5.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>de.dfki.mary</groupId>
+            <artifactId>marytts-client</artifactId>
+            <version>5.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>de.dfki.mary</groupId>
+            <artifactId>marytts-lang-ru</artifactId>
+            <version>5.2.1</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+            <version>77.1</version>
         </dependency>
     </dependencies>
 
