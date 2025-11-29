@@ -55,6 +55,7 @@ logging:
 ## 📝 Документации и ресурсы
 - [Сайт с моделями Vosk](https://alphacephei.com/vosk/models)
 - [Документация для работы с библиотекой discordа](https://discord.com/developers)
+- [Как починить Discord](https://howdyho.net/windows-software/discord-fix-snova-rabotayushij-diskord-vojs-zvonki), либо с [официального сайта](https://github.com/Flowseal/zapret-discord-youtube), лично у меня работает при запуске general (ALT2).bat, либо general (ALT8).bat
 - [Как подключить бота к своему discord серверу(гилдии)](https://www.youtube.com/watch?v=a5Stb2vf6oI)
 
 ## 🛠️ Технологический стек программы
