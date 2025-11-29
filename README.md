@@ -57,7 +57,7 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 ```
 
-## 📝 Документации
+## 📝 Документации и ресурсы
 - [Сайт с моделями Vosk](https://alphacephei.com/vosk/models)
 - [Документация для работы с библиотекой discordа](https://discord.com/developers)
 - [Как подключить бота к своему discord серверу(гилдии)](https://www.youtube.com/watch?v=a5Stb2vf6oI)
