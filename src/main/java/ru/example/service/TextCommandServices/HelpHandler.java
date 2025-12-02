@@ -18,12 +18,12 @@ import static ru.example.constant.MessageConstant.HELP_MESSAGE;
 import static ru.example.constant.MessageConstant.RULES_MESSAGE;
 
 @Service
-public class HelpService {
+public class HelpHandler {
 
     private final Guild guild;
-    private final Logger log = LogManager.getLogger(HelpService.class);
+    private final Logger log = LogManager.getLogger(HelpHandler.class);
 
-    public HelpService(Guild guild) {
+    public HelpHandler(Guild guild) {
         this.guild = guild;
     }
 

@@ -35,7 +35,6 @@ public class JDAConfig {
             JDA jda = JDABuilder.createDefault(token)
                     .setActivity(botActivity)
                     .build();
-
             jda.awaitReady();
             return jda;
         } catch (InterruptedException e) {

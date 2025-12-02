@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.example.enums.VoiceCommandType;
+import ru.example.service.PhoneticTransliterator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ public class BotConfig {
     public String CYRILLIC_TO_LATIN;
     private final Logger log = LogManager.getLogger(BotConfig.class);
 
+
     @Bean
     public Guild guild(JDA jda) {
         Guild guild = jda.getGuildById(guildId);
@@ -39,7 +41,7 @@ public class BotConfig {
     public String botName(JDA jda) {
         Transliterator toLatinTrans = Transliterator.getInstance(CYRILLIC_TO_LATIN);
         String botNameDiscord = jda.getSelfUser().getName();
-        String botName = toLatinTrans.transliterate(botNameDiscord);
+        String botName = PhoneticTransliterator.transliterate(botNameDiscord);
         log.info("Имя бота на сервере - {}", botNameDiscord);
         log.info("Как его поняла программа имя бота программа - {}", botName.toLowerCase());
         return botName.toLowerCase();

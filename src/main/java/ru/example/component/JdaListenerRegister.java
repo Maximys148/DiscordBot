@@ -12,12 +12,12 @@ import java.util.Map;
  * Добавляет слушателей в jda(Чтобы jda был бином без создания зацикливания)
  */
 @Component
-public class JdaListenerRegistrar {
+public class JdaListenerRegister {
 
     private final JDA jda;
     private final ApplicationContext applicationContext;
 
-    public JdaListenerRegistrar(JDA jda, ApplicationContext applicationContext) {
+    public JdaListenerRegister(JDA jda, ApplicationContext applicationContext) {
         this.jda = jda;
         this.applicationContext = applicationContext;
     }

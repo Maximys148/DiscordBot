@@ -19,16 +19,11 @@ public class CommandConfig {
                 Commands.slash("help", "Показать список всех команд"),
                 Commands.slash("rules", "Показать правила сервера"),
                 Commands.slash("join_voice", "Подключить бота к голосовому каналу"),
+                Commands.slash("unmute_user", "Включить пользователю микрофон").addOption(OptionType.USER, "user", "Пользователь"),
 
                 // Информационные команды
                 Commands.slash("profile", "Посмотреть свой профиль"),
-                Commands.slash("server_info", "Информация о сервере")
-        );
-    }
-
-    @Bean
-    public List<SlashCommandData> adminCommands() {
-        return List.of(
+                Commands.slash("server_info", "Информация о сервере"),
                 Commands.slash("admin", "Административные команды")
                         .addSubcommands(new SubcommandData("ban", "Забанить пользователя")
                                 .addOption(OptionType.USER, "user", "Пользователь", true)
