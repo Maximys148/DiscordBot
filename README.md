@@ -62,6 +62,31 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 ```
+- Добавить файл MessageConstant.java в src/main/java/ru/example/constant/ в нём ты указываешь текст помощи(команда /help), текст правил и запрещённые слова.
+Ниже приведу пример файла
+```
+package ru.example.constant;
+
+import java.util.List;
+
+public class MessageConstant {
+    public static final String HELP_MESSAGE = """
+        Приветствую, **%s**! 👋
+        
+        **ДОСТУПНЫЕ КОМАНДЫ** (ваш уровень: %s)
+        
+        %s
+        
+        *Используйте слеш-команды (/команда) для взаимодействия с ботом*
+        """;
+    public static final String RULES_MESSAGE = """
+        **Правила сервера **
+        
+        1.1  Общаться уважительно.
+       
+        """;
+    public static final List<String> BAN_WORD = List.of("Перечисление всяких плохих слов");
+```
 
 ## 📝 Документации и ресурсы
 - [Сайт с моделями Vosk](https://alphacephei.com/vosk/models)
