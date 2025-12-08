@@ -1,14 +1,12 @@
-package ru.example.service;
+package ru.example.service.CommandsExecutor;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.example.service.TextCommandServices.HelpHandler;
-import ru.example.service.TextCommandServices.ProfileService;
-import ru.example.service.TextCommandServices.UnmuteCommandHandler;
-import ru.example.service.TextCommandServices.VoiceService;
+import ru.example.service.TextCommandServices.*;
 
 @Service
 public class TextCommandExecutor extends ListenerAdapter {
@@ -16,15 +14,17 @@ public class TextCommandExecutor extends ListenerAdapter {
     private final HelpHandler helpHandler;
     private final ProfileService profileService;
     private final VoiceService voiceService;
+    private final MuteCommandHandler muteCommandHandler;
     private final UnmuteCommandHandler unmuteCommandHandler;
     private final Logger log = LogManager.getLogger(TextCommandExecutor.class);
 
     public TextCommandExecutor(HelpHandler helpHandler,
                                ProfileService profileService,
-                               VoiceService voiceService, UnmuteCommandHandler unmuteCommandHandler) {
+                               VoiceService voiceService, @Qualifier("textMuteCommandHandler") MuteCommandHandler muteCommandHandler, UnmuteCommandHandler unmuteCommandHandler) {
         this.helpHandler = helpHandler;
         this.profileService = profileService;
         this.voiceService = voiceService;
+        this.muteCommandHandler = muteCommandHandler;
         this.unmuteCommandHandler = unmuteCommandHandler;
     }
 
@@ -45,6 +45,8 @@ public class TextCommandExecutor extends ListenerAdapter {
                     case "join_voice":
                         voiceService.execute(event);
                         break;
+                    case "mute_user":
+                        muteCommandHandler.execute(event);
                     case "unmute_user":
                         unmuteCommandHandler.execute(event);
                     default:

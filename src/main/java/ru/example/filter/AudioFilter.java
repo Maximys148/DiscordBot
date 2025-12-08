@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.example.component.CommandParser;
 import ru.example.enums.VoiceCommandType;
 import ru.example.model.CommandInfo;
-import ru.example.service.AudioCommandExecutor;
+import ru.example.service.CommandsExecutor.AudioCommandExecutor;
 
 import java.util.List;
 import java.util.Map;

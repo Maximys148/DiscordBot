@@ -1,4 +1,4 @@
-package ru.example.service;
+package ru.example.service.CommandsExecutor;
 
 import net.dv8tion.jda.api.entities.User;
 import org.apache.logging.log4j.LogManager;
