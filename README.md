@@ -87,6 +87,10 @@ public class MessageConstant {
         """;
     public static final List<String> BAN_WORD = List.of("Перечисление всяких плохих слов");
 ```
+## Установка и запуск
+docker-compose up - для запуска
+docker-compose config - для просмотра настроек
+"RU_EXAMPLE_STT_MODEL_PATH=/app/models/vosk-model-small-ru-0.22" | Out-File -Encoding ascii .env - для смены моделив консоле
 
 ## 📝 Документации и ресурсы
 - [Сайт с моделями Vosk](https://alphacephei.com/vosk/models)
