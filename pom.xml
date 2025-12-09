@@ -42,6 +42,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <!-- Или для Spring Boot 3.x -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
@@ -136,22 +141,6 @@
             <artifactId>ffmpeg-platform</artifactId>
             <version>6.0-1.5.9</version>
         </dependency>
-        <!-- MaryTTS модули -->
-        <!--<dependency>
-            <groupId>de.dfki.mary</groupId>
-            <artifactId>marytts-common</artifactId>
-            <version>5.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>de.dfki.mary</groupId>
-            <artifactId>marytts-client</artifactId>
-            <version>5.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>de.dfki.mary</groupId>
-            <artifactId>marytts-lang-ru</artifactId>
-            <version>5.2.1</version>
-        </dependency>-->
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
@@ -162,7 +151,6 @@
             <artifactId>commons-codec</artifactId>
             <version>1.16.0</version>
         </dependency>
-
     </dependencies>
 
     <build>

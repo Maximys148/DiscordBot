@@ -1,4 +1,4 @@
-package ru.example.service.voice.TTS;
+package ru.example.service.voice.STT;
 
 import net.dv8tion.jda.api.entities.User;
 import org.apache.logging.log4j.LogManager;
@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.vosk.Model;
 import org.vosk.Recognizer;
 import ru.example.filter.AudioFilter;
+import ru.example.service.voice.OpusToPcmDecoder;
 
 import javax.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;

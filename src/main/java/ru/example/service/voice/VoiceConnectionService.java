@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.example.service.voice.TTS.MyAudioReceiveHandler;
+import ru.example.service.voice.STT.MyAudioReceiveHandler;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;

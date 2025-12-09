@@ -7,25 +7,28 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.example.service.TextCommandServices.*;
+import ru.example.service.voice.TTS.TtsCommandHandler;
 
 @Service
 public class TextCommandExecutor extends ListenerAdapter {
 
     private final HelpHandler helpHandler;
-    private final ProfileService profileService;
-    private final VoiceService voiceService;
+    private final ProfileHandler profileHandler;
+    private final VoiceHandler voiceHandler;
     private final MuteCommandHandler muteCommandHandler;
     private final UnmuteCommandHandler unmuteCommandHandler;
+    private final TtsCommandHandler ttsCommandHandler;
     private final Logger log = LogManager.getLogger(TextCommandExecutor.class);
 
     public TextCommandExecutor(HelpHandler helpHandler,
-                               ProfileService profileService,
-                               VoiceService voiceService, @Qualifier("textMuteCommandHandler") MuteCommandHandler muteCommandHandler, UnmuteCommandHandler unmuteCommandHandler) {
+                               ProfileHandler profileHandler,
+                               VoiceHandler voiceHandler, @Qualifier("textMuteCommandHandler") MuteCommandHandler muteCommandHandler, UnmuteCommandHandler unmuteCommandHandler, TtsCommandHandler ttsCommandHandler) {
         this.helpHandler = helpHandler;
-        this.profileService = profileService;
-        this.voiceService = voiceService;
+        this.profileHandler = profileHandler;
+        this.voiceHandler = voiceHandler;
         this.muteCommandHandler = muteCommandHandler;
         this.unmuteCommandHandler = unmuteCommandHandler;
+        this.ttsCommandHandler = ttsCommandHandler;
     }
 
     @Override
@@ -40,15 +43,19 @@ public class TextCommandExecutor extends ListenerAdapter {
                         helpHandler.executeRules(event);
                         break;
                     case "profile":
-                        profileService.execute(event);
+                        profileHandler.execute(event);
                         break;
                     case "join_voice":
-                        voiceService.execute(event);
+                        voiceHandler.execute(event);
                         break;
+                    case "test_tts":
+                        ttsCommandHandler.execute(event);
                     case "mute_user":
                         muteCommandHandler.execute(event);
+                        break;
                     case "unmute_user":
                         unmuteCommandHandler.execute(event);
+                        break;
                     default:
                         event.getHook().sendMessage("Неизвестная команда").queue();
                         break;

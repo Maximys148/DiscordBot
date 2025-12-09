@@ -8,12 +8,12 @@ import org.springframework.stereotype.Service;
 import ru.example.service.voice.VoiceConnectionService;
 
 @Service
-public class VoiceService {
+public class VoiceHandler {
 
     private final VoiceConnectionService voiceConnectionService;
-    private final Logger log = LogManager.getLogger(VoiceService.class);
+    private final Logger log = LogManager.getLogger(VoiceHandler.class);
 
-    public VoiceService(VoiceConnectionService voiceConnectionService) {
+    public VoiceHandler(VoiceConnectionService voiceConnectionService) {
         this.voiceConnectionService = voiceConnectionService;
     }
 

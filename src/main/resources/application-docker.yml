@@ -1,0 +1,4 @@
+ru:
+  example:
+    stt:
+      model-path: /app/models/vosk-model-small-ru-0.22  # Docker путь!

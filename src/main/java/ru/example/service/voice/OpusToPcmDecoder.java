@@ -1,4 +1,4 @@
-package ru.example.service.voice.TTS;
+package ru.example.service.voice;
 
 import org.springframework.stereotype.Service;
 

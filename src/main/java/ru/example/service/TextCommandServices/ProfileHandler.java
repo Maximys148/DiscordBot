@@ -8,9 +8,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ProfileService {
+public class ProfileHandler {
 
-    private final Logger log = LogManager.getLogger(ProfileService.class);
+    private final Logger log = LogManager.getLogger(ProfileHandler.class);
 
     public void execute(SlashCommandInteractionEvent event) {
         String user = event.getUser().getAsMention();

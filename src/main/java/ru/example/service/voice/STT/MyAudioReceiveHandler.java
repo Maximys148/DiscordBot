@@ -1,4 +1,4 @@
-package ru.example.service.voice.TTS;
+package ru.example.service.voice.STT;
 
 import lombok.Setter;
 import net.dv8tion.jda.api.audio.AudioReceiveHandler;
