@@ -80,10 +80,9 @@ public class SttService {
             }
 
             // log.info("🔤 Извлеченный текст до фикса: '{}'", rawText);
-            String fixedText = fixTextEncoding(rawText);
-            audioFilter.checkAudio(fixedText, user);
-            log.info("{} - {}", user.getGlobalName(), fixedText);
-            return fixedText;
+            audioFilter.checkAudio(rawText, user);
+            log.info("{} - {}", user.getGlobalName(), rawText);
+            return rawText;
 
         } catch (Exception e) {
             log.error("❌ Ошибка распознавания фразы", e);
@@ -136,32 +135,6 @@ public class SttService {
             return "";
         }
     }
-
-    /**
-     * Исправляет кодировку текста
-     */
-    private String fixTextEncoding(String text) {
-        if (text == null || text.isEmpty()) {
-            return text;
-        }
-
-        try {
-            log.debug("🔧 Исправление кодировки: '{}'", text);
-
-            // Vosk возвращает UTF-8 байты, но они интерпретируются как Windows-1251
-            byte[] bytes = text.getBytes("Windows-1251");
-            String fixed = new String(bytes, StandardCharsets.UTF_8);
-
-            // log.info("✅ Кодировка исправлена: '{}' -> '{}'", text, fixed);
-            return fixed;
-
-        } catch (Exception e) {
-            log.warn("⚠️ Не удалось исправить кодировку для: '{}'", text);
-            return text;
-        }
-    }
-
-
 
     @PreDestroy
     public void cleanup() {
