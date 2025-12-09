@@ -88,9 +88,9 @@ public class MessageConstant {
     public static final List<String> BAN_WORD = List.of("Перечисление всяких плохих слов");
 ```
 ## Установка и запуск
-docker-compose up - для запуска
-docker-compose config - для просмотра настроек
-"RU_EXAMPLE_STT_MODEL_PATH=/app/models/vosk-model-small-ru-0.22" | Out-File -Encoding ascii .env - для смены моделив консоле
+- docker-compose up - для запуска
+- docker-compose config - для просмотра настроек
+- "RU_EXAMPLE_STT_MODEL_PATH=/app/models/vosk-model-small-ru-0.22" | Out-File -Encoding ascii .env - для смены моделив консоле
 
 ## 📝 Документации и ресурсы
 - [Сайт с моделями Vosk](https://alphacephei.com/vosk/models)
@@ -103,3 +103,4 @@ docker-compose config - для просмотра настроек
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![Log4j](https://img.shields.io/badge/Log4j-1F1F1F?style=for-the-badge&logo=apache&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)  
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
