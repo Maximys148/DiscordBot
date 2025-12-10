@@ -2,3 +2,6 @@ ru:
   example:
     stt:
       model-path: /app/models/vosk-model-small-ru-0.22  # Docker путь!
+app:
+  tts:
+    service-url: ${TTS_SERVICE_URL:http://tts-service:5002}

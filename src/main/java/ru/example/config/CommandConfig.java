@@ -21,7 +21,7 @@ public class CommandConfig {
             Commands.slash("profile", "Посмотреть свой профиль"),
             Commands.slash("join_voice", "Подключить бота к голосовому каналу"),
             Commands.slash("test_tts", "Тестирование озвучки голосом")
-                    .addOption(OptionType.STRING, "text", "Текст для озвучки")
+                    .addOption(OptionType.STRING, "text", "Текст для озвучки", true)
                     .addOption(OptionType.STRING, "model", "tts_models/ru/css10/vits | tts_models/en/ljspeech/vits", false),
             Commands.slash("mute_user", "Выключить микрофон у пользователя")
                 .addOption(OptionType.USER, "user", "Пользователь"),

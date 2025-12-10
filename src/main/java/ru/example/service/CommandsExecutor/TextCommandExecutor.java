@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.example.service.TextCommandServices.*;
 import ru.example.service.voice.TTS.TtsCommandHandler;
@@ -22,7 +21,10 @@ public class TextCommandExecutor extends ListenerAdapter {
 
     public TextCommandExecutor(HelpHandler helpHandler,
                                ProfileHandler profileHandler,
-                               VoiceHandler voiceHandler, @Qualifier("textMuteCommandHandler") MuteCommandHandler muteCommandHandler, UnmuteCommandHandler unmuteCommandHandler, TtsCommandHandler ttsCommandHandler) {
+                               VoiceHandler voiceHandler,
+                               MuteCommandHandler muteCommandHandler,
+                               UnmuteCommandHandler unmuteCommandHandler,
+                               TtsCommandHandler ttsCommandHandler) {
         this.helpHandler = helpHandler;
         this.profileHandler = profileHandler;
         this.voiceHandler = voiceHandler;
@@ -33,7 +35,7 @@ public class TextCommandExecutor extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        event.deferReply(true).queue(hook -> {
+        event.deferReply().queue(hook -> {
             try {
                 switch (event.getName()) {
                     case "help":
@@ -49,7 +51,8 @@ public class TextCommandExecutor extends ListenerAdapter {
                         voiceHandler.execute(event);
                         break;
                     case "test_tts":
-                        ttsCommandHandler.execute(event);
+                        ttsCommandHandler.execute(event, hook);  // TTS сам сделает deferReply
+                        break;
                     case "mute_user":
                         muteCommandHandler.execute(event);
                         break;
@@ -57,15 +60,13 @@ public class TextCommandExecutor extends ListenerAdapter {
                         unmuteCommandHandler.execute(event);
                         break;
                     default:
-                        event.getHook().sendMessage("Неизвестная команда").queue();
+                        event.reply("Неизвестная команда").setEphemeral(true).queue();
                         break;
                 }
             } catch (Exception e) {
                 log.error("Ошибка выполнения команды {}: {}", event.getName(), e.getMessage());
-                event.getHook().sendMessage("Ошибка выполнения команды").queue();
+                event.reply("Ошибка выполнения команды").setEphemeral(true).queue();
             }
-        }, error -> {
-            log.error("Ошибка deferReply: {}", error.getMessage());
         });
     }
 }

@@ -26,7 +26,6 @@ public class JdaListenerRegister {
     public void registerAllListeners() {
         // Получаем все бины, которые реализуют EventListener
         Map<String, EventListener> listeners = applicationContext.getBeansOfType(EventListener.class);
-        
         listeners.values().forEach(jda::addEventListener);
     }
 }
