@@ -1,42 +1,42 @@
+# docker-compose.yml
+version: '3.8'
+
 services:
   tts-service:
-    image: ghcr.io/coqui-ai/tts-cpu:latest
-    container_name: coqui-tts
-    ports:
-      - "5002:5002"
-    entrypoint: ["/bin/bash"]
-    environment:
-      - COQUI_TOS_AGREED=YES  # ✅ Обход лицензии!
-    command:
-      - -c
-      - >
-        python3 -m TTS.server.server 
-        --model_name tts_models/en/ljspeech/tacotron2-DDC 
-        --port 5002 
-        --use_cuda false
-    volumes:
-      - ./tts_models:/root/.local/share/tts
+    image: python:3.11-slim
+    container_name: tts-service
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5002 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 120s  # 2 мин (модель 100MB)
+    volumes:
+      - ./tts_service:/app
+    working_dir: /app
+    # Запуск простого HTTP-сервера для синтеза речи
+    command: >
+      bash -c "
+      pip install --no-cache-dir flask transformers torch scipy ruaccent &&
+      python tts_server.py
+      "
+    ports:
+      # Порт для запросов от Discord-бота
+      - "5000:5000"
+    # Для ускорения на GPU потребуется nvidia-container-toolkit
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   discord-bot:
     build: .
     container_name: discord-bot
     ports:
       - "8090:8090"
+    volumes:
+      - ./debug:/app/debug
     environment:
-      - RU_EXAMPLE_STT_MODEL_PATH=${RU_EXAMPLE_STT_MODEL_PATH}
       - SPRING_PROFILES_ACTIVE=docker
-      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8
-      - TTS_SERVICE_URL=http://tts-service:5002
+      - TTS_SERVICE_URL=http://tts-service:5000
     depends_on:
-      tts-service:
-        condition: service_healthy
-    stdin_open: true
-    tty: true
+      - tts-service
     restart: unless-stopped

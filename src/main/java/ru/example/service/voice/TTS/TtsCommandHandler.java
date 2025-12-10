@@ -8,36 +8,31 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.managers.AudioManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import ru.example.service.voice.OpusToPcmDecoder;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import java.awt.*;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Service
 public class TtsCommandHandler {
     private final RestTemplate restTemplate = new RestTemplate();
-    private final OpusToPcmDecoder pcmDecoder;
-    private final String ttsUrl = "http://tts-service:5002/api/tts";  // ✅ localhost для теста
+    private final String ttsUrl = "http://tts-service:5000/synthesize";
     private static final Logger log = LogManager.getLogger(TtsCommandHandler.class);
-
-    public TtsCommandHandler(OpusToPcmDecoder pcmDecoder) {
-        this.pcmDecoder = pcmDecoder;
-    }
 
     public void execute(SlashCommandInteractionEvent event, InteractionHook hook) {
         Guild guild = event.getGuild();
@@ -51,20 +46,16 @@ public class TtsCommandHandler {
 
         CompletableFuture.runAsync(() -> {
             try {
-                // 1. TTS → WAV (POST multipart)
-                byte[] wavData = generateWavFromTts(text);
-                byte[] discordPcm = convertToDiscordPcm(wavData);
-                // После FFmpeg в convertToDiscordPcm():
+                // 1. TTS → Discord PCM напрямую
+                byte[] discordPcm = generateDiscordPcmFromTts(text);
 
-                // Путь внутри Docker
-                Path path = Paths.get("/app/debug_pcm.raw");
-                Files.write(path, discordPcm);
-                log.info("DEBUG PCM saved to {}", path.toAbsolutePath());
+                log.info("✅ Готово PCM: {} байт ({} пакетов)",
+                        discordPcm.length, discordPcm.length / 3840);
 
-                // 2. Discord
+                // 2. Discord воспроизведение
                 playPcmInDiscord(guild, discordPcm);
 
-                // ✅ editOriginal (НЕ sendMessage!)
+                // Результат
                 hook.editOriginalEmbeds(
                         new EmbedBuilder()
                                 .setTitle("🗣️ TTS выполнен")
@@ -80,104 +71,127 @@ public class TtsCommandHandler {
         });
     }
 
-    // ✅ POST multipart (НЕ GET!)
+    private byte[] generateDiscordPcmFromTts(String text) throws Exception {
+        byte[] wavData = generateWavFromTts(text);
+        return convertWavToDiscordPcm(wavData);
+    }
+
     private byte[] generateWavFromTts(String text) {
+        String jsonRequest = String.format("{\"text\": \"%s\", \"speaker_id\": 0}",
+                text.replace("\"", "\\\""));
+
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("text", text);
-        body.add("format", "wav");
+        HttpEntity<String> request = new HttpEntity<>(jsonRequest, headers);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<byte[]> response = restTemplate.postForEntity(ttsUrl, request, byte[].class);
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                ttsUrl, HttpMethod.POST, request, byte[].class
+        );
 
-        log.info("✅ TTS OK: {} байт", response.getBody().length);
+        log.info("✅ TTS WAV: {} байт", response.getBody().length);
         return response.getBody();
     }
 
-    private void playPcmInDiscord(Guild guild, byte[] pcm) {
+    private void playPcmInDiscord(Guild guild, byte[] audioData) {
         AudioManager audioManager = guild.getAudioManager();
+        audioManager.setSendingHandler(new FixedPcmHandler(audioData));
+    }
 
-        // 🔍 ЛОГ 1: Бот в канале?
-        log.info("🔊 AudioManager: connected={}, channel={}",
-                audioManager.isConnected(),
-                audioManager.getConnectedChannel() != null ?
-                        audioManager.getConnectedChannel().getName() : "null");
+    // ✅ ИСПРАВЛЕННЫЙ: Прямой PCM handler БЕЗ JavaSound конвертации
+    private static class FixedPcmHandler implements AudioSendHandler {
+        private final byte[] pcmData;
+        private int position = 0;
+        private final int PACKET_SIZE = 3840; // 20ms = 48kHz * 16bit * 2ch * 0.02s
 
-        if (!audioManager.isConnected()) {
-            log.error("❌ Бот НЕ в голосовом канале!");
-            return;
+        public FixedPcmHandler(byte[] pcmData) {
+            this.pcmData = pcmData;
+            log.info("🎵 PCM Handler: {} байт, {} пакетов",
+                    pcmData.length, pcmData.length / PACKET_SIZE);
         }
 
-        audioManager.setSendingHandler(new AudioSendHandler() {
-            private final ByteArrayInputStream stream = new ByteArrayInputStream(pcm);
-            private int packetsSent = 0;
+        @Override
+        public boolean canProvide() {
+            return position < pcmData.length;
+        }
 
-            @Override
-            public boolean canProvide() {
-                return stream.available() > 0;
+        @Override
+        public ByteBuffer provide20MsAudio() {
+            if (position >= pcmData.length) return null;
+
+            int remaining = pcmData.length - position;
+            int bytesToCopy = Math.min(PACKET_SIZE, remaining);
+
+            byte[] packet = new byte[PACKET_SIZE];
+            System.arraycopy(pcmData, position, packet, 0, bytesToCopy);
+
+            // Остаток нулями (нормально для конца аудио)
+            if (bytesToCopy < PACKET_SIZE) {
+                Arrays.fill(packet, bytesToCopy, PACKET_SIZE, (byte) 0);
             }
 
-            @Override
-            public ByteBuffer provide20MsAudio() {
-                byte[] buffer = new byte[3840]; // 20ms 48kHz stereo 16bit
-                int read;
-                try {
-                    read = stream.read(buffer);
-                } catch (IOException e) {
-                    return null;
-                }
+            position += PACKET_SIZE;
+            return ByteBuffer.wrap(packet);
+        }
 
-                if (read <= 0) {
-                    log.info("📦 Пакеты отправлено: {}", packetsSent);
-                    return null; // конец потока
-                }
-
-                packetsSent++;
-                if (packetsSent % 50 == 0) {  // 🔍 ЛОГ 2: пакеты идут?
-                    log.info("📦 Отправлено пакетов: {}", packetsSent);
-                }
-
-                if (read < buffer.length) {
-                    Arrays.fill(buffer, read, buffer.length, (byte) 0);
-                }
-                return ByteBuffer.wrap(buffer);
-            }
-
-            @Override
-            public boolean isOpus() {
-                return false;  // 🔍 ЛОГ 3: PCM режим!
-            }
-        });
-
-        log.info("✅ PCM отправлен: {} байт (~{} сек)", pcm.length, pcm.length / 384000.0);
+        @Override
+        public boolean isOpus() {
+            return false; // ЧИСТЫЙ PCM
+        }
     }
 
+    private byte[] convertWavToDiscordPcm(byte[] wavData) throws Exception {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(wavData);
+             AudioInputStream ais = AudioSystem.getAudioInputStream(bais)) {
 
-    private byte[] convertToDiscordPcm(byte[] wavData) throws Exception {
-        // Сохраняем временный WAV
-        Path tempWav = Files.createTempFile("tts_", ".wav");
-        Files.write(tempWav, wavData);
+            AudioFormat sourceFormat = ais.getFormat();
+            log.info("🔍 WAV: {}Hz {}ch {}bit",
+                    sourceFormat.getSampleRate(),
+                    sourceFormat.getChannels(),
+                    sourceFormat.getSampleSizeInBits());
 
-        ProcessBuilder pb = new ProcessBuilder(
-                "ffmpeg", "-y", "-i", tempWav.toString(),
-                "-ar", "48000", "-ac", "1", "-f", "s16le", "-acodec", "pcm_s16le",
-                "pipe:1"
-        );
+            // ✅ ПРЯМАЯ конвертация в Discord PCM БЕЗ промежуточных шагов!
+            AudioFormat discordFormat = new AudioFormat(
+                    AudioFormat.Encoding.PCM_SIGNED,  // S16LE
+                    48000.0f,       // 48kHz
+                    16,             // 16bit
+                    2,              // Stereo
+                    4,              // 4 bytes per frame
+                    48000.0f,       // frame rate
+                    false           // little-endian
+            );
 
+            AudioInputStream discordStream = AudioSystem.getAudioInputStream(
+                    discordFormat, ais
+            );
 
-        Process process = pb.start();
-        byte[] discordPcm = process.getInputStream().readAllBytes();
-        process.waitFor();
-        // В convertToDiscordPcm, после FFmpeg:
-        Files.write(Paths.get("/tmp/debug_pcm.raw"), discordPcm);
-        log.info("✅ DEBUG: /tmp/debug_pcm.raw сохранён (открой в Audacity как raw PCM 48kHz stereo 16bit little-endian)");
+            byte[] pcmData = readAllBytes(discordStream);
 
-        Files.delete(tempWav);
+            // ✅ Выравниваем под пакеты Discord
+            int packetCount = pcmData.length / 3840;
+            int alignedLength = packetCount * 3840;
 
-        log.info("✅ FFmpeg PCM: {} байт", discordPcm.length);
-        return discordPcm;
+            log.info("✅ Конвертация завершена: {} -> {} байт ({} пакетов)",
+                    pcmData.length, alignedLength, packetCount);
+
+            Files.write(Paths.get("/app/discord_pcm.raw"),
+                    Arrays.copyOf(pcmData, alignedLength));
+
+            return Arrays.copyOf(pcmData, alignedLength);
+
+        } catch (Exception e) {
+            log.error("❌ Конвертация сломалась", e);
+            throw e;
+        }
     }
 
+    private byte[] readAllBytes(AudioInputStream stream) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = stream.read(buffer)) != -1) {
+            baos.write(buffer, 0, bytesRead);
+        }
+        return baos.toByteArray();
+    }
 }
