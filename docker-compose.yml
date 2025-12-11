@@ -4,28 +4,17 @@ version: '3.8'
 services:
   tts-service:
     image: python:3.11-slim
-    container_name: tts-service
-    restart: unless-stopped
     volumes:
       - ./tts_service:/app
     working_dir: /app
-    # Запуск простого HTTP-сервера для синтеза речи
     command: >
       bash -c "
-      pip install --no-cache-dir flask transformers torch scipy ruaccent &&
+      pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu &&
+      pip install --no-cache-dir omegaconf scipy flask numpy &&
       python tts_server.py
       "
     ports:
-      # Порт для запросов от Discord-бота
       - "5000:5000"
-    # Для ускорения на GPU потребуется nvidia-container-toolkit
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   discord-bot:
     build: .

@@ -1,62 +1,66 @@
-# tts_service/tts_server.py
 from flask import Flask, request, send_file
-from transformers import VitsModel, AutoTokenizer
 import torch
-import scipy.io.wavfile
 import io
-from ruaccent import RUAccent
 import numpy as np
+from scipy.io import wavfile
 
 app = Flask(__name__)
 
-# Имя модели с Hugging Face (меняйте здесь, если нужно)
-MODEL_NAME = "utrobinmv/tts_ru_free_hf_vits_high_multispeaker"
-# MODEL_NAME = "facebook/mms-tts-rus"  # Альтернатива от Meta
-
-# Загрузка модели и токенизатора один раз при старте
-print(f"Загрузка модели {MODEL_NAME}...")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model = VitsModel.from_pretrained(MODEL_NAME).to(device)
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-accentizer = RUAccent()
-accentizer.load(omograph_model_size='turbo', use_dictionary=True)
-model.eval()
-print("Модель готова к работе.")
+print("Загрузка Silero TTS...")
+device = "cpu"
+model, _ = torch.hub.load(
+    repo_or_dir='snakers4/silero-models',
+    model='silero_tts',
+    language='ru',
+    speaker='v3_1_ru'
+)
+speakers = model.speakers
+print(f"Спикеры: {speakers}")
 
 @app.route('/synthesize', methods=['POST'])
 def synthesize():
-    """Эндпоинт для синтеза речи. Ждёт JSON с 'text' и опционально 'speaker_id'."""
     data = request.get_json()
-    text = data.get('text', '').strip().lower()  # Модель ожидает нижний регистр [citation:5]
-    speaker_id = int(data.get('speaker_id', 0))  # 0-женщина, 1-мужчина [citation:5]
+    text = data.get('text', '').strip()
+    speaker = data.get('speaker', 'aidar')
 
     if not text:
-        return {"error": "Текст не может быть пустым"}, 400
+        return {"error": "Текст пустой"}, 400
 
-    # 1. Расстановка ударений для лучшего качества [citation:5][citation:10]
-    try:
-        text_with_accents = accentizer.process_all(text)
-    except Exception:
-        text_with_accents = text
+    audio = model.apply_tts(
+        text=text,
+        speaker=speaker,
+        sample_rate=48000,
+        put_accent=True,
+        put_yo=True
+    )
 
-    # 2. Токенизация и синтез
-    inputs = tokenizer(text_with_accents, return_tensors="pt")
-    with torch.no_grad():
-        output = model(inputs["input_ids"].to(device), speaker_id=speaker_id).waveform
-        audio_array = output.cpu().numpy().squeeze()
+    audio = torch.clamp(audio, -1.0, 1.0)
+    mono = (audio.numpy() * 32767).astype(np.int16)
 
-    # 3. Возврат аудио в виде WAV-файла
-    sampling_rate = model.config.sampling_rate
-    buffer = io.BytesIO()
-    scipy.io.wavfile.write(buffer, rate=sampling_rate, data=audio_array)
+    stereo = np.stack([mono, mono], axis=1)  # (N, 2)
+
+    # ✅ ИСПРАВЛЕНО для NumPy 2.0: BIG-ENDIAN для Discord!
+    stereo_big_endian = stereo.astype('>i2')
+
+    pcm_bytes = stereo_big_endian.tobytes()
+
+    # ✅ выравнивание по 3840 байт
+    packet_size = 3840
+    aligned_len = (len(pcm_bytes) // packet_size) * packet_size
+    pcm_bytes = pcm_bytes[:aligned_len]
+
+    print(f"🎵 PCM BIG-ENDIAN: {len(pcm_bytes)} bytes, {len(pcm_bytes)//packet_size} packets")
+
+    buffer = io.BytesIO(pcm_bytes)
     buffer.seek(0)
 
     return send_file(
         buffer,
-        mimetype='audio/wav',
+        mimetype='application/octet-stream',
         as_attachment=True,
-        download_name='speech.wav'
+        download_name='speech.pcm'
     )
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False)
