@@ -35,14 +35,12 @@ public class TtsCommandHandler {
         String text = event.getOption("text").getAsString();
         log.info("🗣️ TTS: {}", text);
 
-        event.reply("🔄 Генерация речи...").setEphemeral(false).queue();
-
         CompletableFuture.runAsync(() -> {
             try {
                 byte[] discordPcm = generateDiscordPcmFromTts(text);
                 playPcmInDiscord(guild, discordPcm);
 
-                event.getHook().editOriginalEmbeds(
+                hook.editOriginalEmbeds(
                         new EmbedBuilder()
                                 .setTitle("🗣️ TTS выполнен")
                                 .setDescription("**" + text + "**")
