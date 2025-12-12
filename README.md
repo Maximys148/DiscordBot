@@ -89,9 +89,9 @@ public class MessageConstant {
     public static final List<String> BAN_WORD = List.of("Перечисление всяких плохих слов");
 ```
 ## Установка и запуск
--# 1. Клонирование и настройка
-git clone <https://github.com/Maximys148/DiscordBot>
-cd DiscordBot
+# 1. Клонирование и настройка
+- git clone <https://github.com/Maximys148/DiscordBot>
+- cd DiscordBot
 
 # 2. Создание необходимых директорий
 mkdir -p tts_service vits_service debug
