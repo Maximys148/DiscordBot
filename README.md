@@ -4,7 +4,7 @@
 
 ## 🌟 Особенности
 - Локальное распознание речи с помощью модели Vosk
-- Локальное генерация речи с помощью модели Silero
+- Локальное генерация речи с помощью интеграции локального сервера с моделью Silero
 - Подробное логирование всех запросов
 
 ## 💬 Команды бота
@@ -111,6 +111,8 @@ docker-compose up -d
 ## 🛠️ Технологический стек программы
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Spring Web](https://img.shields.io/badge/Spring_Web-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
 ![Log4j](https://img.shields.io/badge/Log4j-1F1F1F?style=for-the-badge&logo=apache&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)  
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
