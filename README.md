@@ -98,7 +98,8 @@ public class MessageConstant {
 mkdir -p tts_service vits_service debug
 
 # 3. Настройка переменных окружения (Windows PowerShell)
-"RU_EXAMPLE_STT_MODEL_PATH=/app/models/vosk-model-small-ru-0.22" | Out-File -Encoding ascii .env // тут выбираешь модель из папки models в корне проекта
+- "RU_EXAMPLE_STT_MODEL_PATH=/app/models/vosk-model-small-ru-0.22" | Out-File -Encoding ascii .env // тут выбираешь модель из папки models в корне проекта
+- docker-compose config просмотр настроек
 
 # 4. Запуск всех сервисов
 docker-compose up -d
