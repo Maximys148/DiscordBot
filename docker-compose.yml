@@ -1,0 +1,31 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  tts-service:
+    image: python:3.11-slim
+    volumes:
+      - ./tts_service:/app
+    working_dir: /app
+    command: >
+      bash -c "
+      pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu &&
+      pip install --no-cache-dir omegaconf scipy flask numpy &&
+      python tts_server.py
+      "
+    ports:
+      - "5000:5000"
+
+  discord-bot:
+    build: .
+    container_name: discord-bot
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./debug:/app/debug
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - TTS_SERVICE_URL=http://tts-service:5000
+    depends_on:
+      - tts-service
+    restart: unless-stopped
