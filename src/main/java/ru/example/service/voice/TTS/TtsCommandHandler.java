@@ -8,22 +8,29 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.managers.AudioManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 @Service
 public class TtsCommandHandler {
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String ttsUrl = "http://tts-service:5000/synthesize";
     private static final Logger log = LogManager.getLogger(TtsCommandHandler.class);
+
+    @Value("${app.tts.fast.url:http://tts-service:5000/synthesize}")
+    private String ttsFastUrl;
+
+    @Value("${app.tts.natural.url:http://vits-service:5001/synthesize}")
+    private String ttsNaturalUrl;
+
+    @Value("${app.tts.default-mode:fast}")
+    private String defaultMode;
 
     public void execute(SlashCommandInteractionEvent event, InteractionHook hook) {
         Guild guild = event.getGuild();
@@ -35,28 +42,46 @@ public class TtsCommandHandler {
         String text = event.getOption("text").getAsString();
         log.info("🗣️ TTS: {}", text);
 
+        event.deferReply().queue();  // 1. Отложить ответ
+
         CompletableFuture.runAsync(() -> {
             try {
-                byte[] discordPcm = generateDiscordPcmFromTts(text);
+                String model = event.getOption("model") != null ?
+                        event.getOption("model").getAsString() : defaultMode;
+
+                String ttsUrl = "silero".equals(model) || "VITS".equals(model) ? ttsFastUrl : ttsNaturalUrl;
+                log.info("🎤 TTS режим: '{}' → {}", model, ttsUrl);
+
+                byte[] discordPcm = generateDiscordPcmFromTts(text, ttsUrl);
                 playPcmInDiscord(guild, discordPcm);
 
-                hook.editOriginalEmbeds(
+                // ✅ Теперь event.getHook() работает!
+                event.getHook().editOriginalEmbeds(  // ← Было event.getHook()
                         new EmbedBuilder()
                                 .setTitle("🗣️ TTS выполнен")
                                 .setDescription("**" + text + "**")
+                                .addField("🎵 Модель", model.toUpperCase(), true)
                                 .setColor(Color.GREEN)
                                 .build()
                 ).queue();
 
             } catch (Exception e) {
                 log.error("❌ TTS failed", e);
-                event.getHook().editOriginal("❌ **TTS:** " + e.getMessage()).queue();
+                event.getHook().editOriginalEmbeds(  // ← Работает после deferReply()
+                        new EmbedBuilder()
+                                .setTitle("❌ TTS ошибка")
+                                .setDescription(e.getMessage())
+                                .setColor(Color.RED)
+                                .build()
+                ).queue();
             }
         });
     }
 
-    private byte[] generateDiscordPcmFromTts(String text) {
-        String jsonRequest = String.format("{\"text\": \"%s\", \"speaker\": \"aidar\"}",
+
+    /** ✅ Генерация PCM с динамическим URL модели */
+    private byte[] generateDiscordPcmFromTts(String text, String ttsUrl) {
+        String jsonRequest = String.format("{\"text\": \"%s\", \"speaker\": \"xenia\"}",  // xenia по умолчанию
                 text.replace("\"", "\\\""));
 
         HttpHeaders headers = new HttpHeaders();
@@ -81,22 +106,20 @@ public class TtsCommandHandler {
         return Arrays.copyOf(pcm, alignedLength);
     }
 
-
     private void playPcmInDiscord(Guild guild, byte[] audioData) {
         AudioManager audioManager = guild.getAudioManager();
         audioManager.setSendingHandler(new FixedPcmHandler(audioData));
     }
 
-    // ✅ PCM handler остается без изменений - идеален
+    // ✅ PCM handler без изменений
     private static class FixedPcmHandler implements AudioSendHandler {
         private final byte[] pcmData;
         private int position = 0;
-        private final int PACKET_SIZE = 3840; // 20ms = 48kHz * 16bit * 2ch * 0.02s
+        private final int PACKET_SIZE = 3840;
 
         public FixedPcmHandler(byte[] pcmData) {
             this.pcmData = pcmData;
-            log.info("🎵 PCM Handler: {} байт, {} пакетов",
-                    pcmData.length, pcmData.length / PACKET_SIZE);
+            log.info("🎵 PCM Handler: {} байт, {} пакетов", pcmData.length, pcmData.length / PACKET_SIZE);
         }
 
         @Override
@@ -124,14 +147,7 @@ public class TtsCommandHandler {
 
         @Override
         public boolean isOpus() {
-            return false; // ЧИСТЫЙ PCM
+            return false;
         }
     }
-
-    // ✅ УДАЛЕНЫ старые методы:
-    // - generateWavFromTts()
-    // - convertWavToDiscordPcm()
-    // - manualConvertToDiscordPcm()
-    // - readAllBytes()
-    // - Вся работа с AudioInputStream/AudioFormat
 }
