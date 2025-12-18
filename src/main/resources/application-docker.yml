@@ -1,0 +1,19 @@
+ru:
+  example:
+    stt:
+      model-path: /app/models/vosk-model-small-ru-0.22  # Docker путь!
+app:
+  tts:
+    fast:
+      url: http://tts-service:5000/synthesize     # ✅ Silero (fast)
+    natural:
+      url: http://vits-service:5001/synthesize    # ✅ VITS (natural)
+    default-mode: fast
+
+# Твой старый остается для обратной совместимости
+# app:
+#   tts:
+#     service-url: http://tts-service:5000/synthesize
+vits:
+  service:
+    url: http://vits-service:5001/synthesize
