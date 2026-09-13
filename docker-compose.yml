@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # ✅ СТАРЫЙ Silero (НЕ ТРОГАЕМ!)
+  tts-service:
+    image: python:3.11-slim
+    volumes:
+      - ./tts_service:/app
+    working_dir: /app
+    command: >
+      bash -c "
+      pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu &&
+      pip install --no-cache-dir omegaconf scipy flask numpy &&
+      python tts_server.py
+      "
+    ports:
+      - "5000:5000"
+
+  # ✅ НОВЫЙ XTTS (использует уже скачанную модель)
+  vits-service:
+    image: python:3.11-slim
+    environment:
+      - COQUI_TOS_AGREED=1
+    volumes:
+      - ./vits_service:/app
+    working_dir: /app
+    command: >
+      bash -c "
+      pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu &&
+      pip install --no-cache-dir 'transformers>=4.36.0,<4.40.0' &&
+      pip install --no-cache-dir TTS flask numpy scipy soundfile &&
+      python vits_server.py
+      "
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+
+
+  discord-bot:
+    build: .
+    container_name: discord-bot
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./debug:/app/debug
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - TTS_SERVICE_URL=http://tts-service:5000        # Silero (быстрый)
+      - VITS_SERVICE_URL=http://vits-service:5001      # XTTS (натуральный)
+    depends_on:
+      - tts-service
+      - vits-service
+    restart: unless-stopped
